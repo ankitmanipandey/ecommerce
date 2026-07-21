@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SiteNav, SiteFooter } from "../components/site-nav";
+import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { useCart } from "../lib/cart";
 import { formatINR } from "../lib/products";

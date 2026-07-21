@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { SiteNav, SiteFooter } from "../components/site-nav";
+import { SiteNav, SiteFooter } from "../components/Navbar";
 import { categories, products, formatINR } from "../lib/products";
 import { cn } from "../lib/utils";
 

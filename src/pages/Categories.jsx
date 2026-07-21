@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SiteNav, SiteFooter } from "../components/site-nav";
+import { SiteNav, SiteFooter } from "../components/Navbar";
 import { categories, products } from "../lib/products";
 import { ArrowRight } from "lucide-react";
 

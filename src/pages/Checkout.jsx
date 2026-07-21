@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { SiteNav, SiteFooter } from "../components/site-nav";
+import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { SiteNav, SiteFooter } from "../components/site-nav";
+import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { findProduct, formatINR } from "../lib/products";
 import { useCart } from "../lib/cart";
