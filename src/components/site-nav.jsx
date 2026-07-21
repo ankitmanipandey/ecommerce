@@ -191,8 +191,8 @@ export function SiteNav() {
                                 to={item.path}
                                 onClick={() => setOpen(false)}
                                 className={`rounded-xl px-4 py-3 text-lg font-serif tracking-wide transition-all ${isActive
-                                        ? "bg-primary/10 text-primary font-semibold shadow-sm"
-                                        : "text-foreground hover:bg-secondary/60 hover:text-primary"
+                                    ? "bg-primary/10 text-primary font-semibold shadow-sm"
+                                    : "text-foreground hover:bg-secondary/60 hover:text-primary"
                                     }`}
                             >
                                 {item.name}
@@ -313,13 +313,16 @@ export function SiteFooter() {
                     <h3 className="text-sm font-semibold tracking-wider text-foreground uppercase">Shop Collections</h3>
                     <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                         <li>
-                            <Link to="/shop" className="hover:text-primary transition-colors duration-200">Youth &amp; Trend</Link>
+                            {/* Updated with state={{ category: "Youth & Trend" }} */}
+                            <Link to="/shop" state={{ category: "Youth & Trend" }} className="hover:text-primary transition-colors duration-200">Youth &amp; Trend</Link>
                         </li>
                         <li>
-                            <Link to="/shop" className="hover:text-primary transition-colors duration-200">Festive &amp; Bridal</Link>
+                            {/* Updated with state={{ category: "Festive & Bridal" }} */}
+                            <Link to="/shop" state={{ category: "Festive & Bridal" }} className="hover:text-primary transition-colors duration-200">Festive &amp; Bridal</Link>
                         </li>
                         <li>
-                            <Link to="/shop" className="hover:text-primary transition-colors duration-200">Timeless Elegance</Link>
+                            {/* Updated with state={{ category: "Timeless Elegance" }} */}
+                            <Link to="/shop" state={{ category: "Timeless Elegance" }} className="hover:text-primary transition-colors duration-200">Timeless Elegance</Link>
                         </li>
                     </ul>
                 </div>
