@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { useCart } from "../lib/cart";
@@ -7,6 +8,12 @@ import { Minus, Plus, X, ShoppingBag } from "lucide-react";
 
 export function CartPage() {
   const { items, setQty, remove, total, count } = useCart();
+
+  // Scroll to the top of the window automatically when the component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteNav />

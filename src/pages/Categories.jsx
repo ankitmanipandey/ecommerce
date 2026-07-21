@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { categories, products } from "../lib/products";
 import { ArrowRight } from "lucide-react";
 
 export function Categories() {
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
@@ -25,7 +31,7 @@ export function Categories() {
                             <Link
                                 key={c.name}
                                 to="/shop"
-                                state={{ category: c.name }} // <-- This sends the chosen category to the Shop page
+                                state={{ category: c.name }}
                                 className="group relative overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-all duration-300 hover:-translate-y-1 hover:shadow-(--shadow-luxe) animate-in fade-in slide-in-from-bottom-6 fill-mode-both"
                                 style={{ animationDelay: `${(index + 1) * 150}ms` }}
                             >

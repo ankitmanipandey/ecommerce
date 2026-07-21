@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { categories, products, formatINR } from "../lib/products.js";
@@ -6,6 +7,11 @@ import hero from "../assets/hero.jpg";
 import { ArrowRight } from "lucide-react";
 
 export function Home() {
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
@@ -63,7 +69,7 @@ export function Home() {
                                 <Link
                                     key={c.name}
                                     to="/shop"
-                                    state={{ category: c.name }} // <-- ADDED THIS LINE HERE
+                                    state={{ category: c.name }}
                                     className="group relative overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-all duration-300 hover:-translate-y-1 hover:shadow-(--shadow-luxe) animate-in fade-in slide-in-from-bottom-4"
                                     style={{ animationDelay: `${index * 150}ms` }}
                                 >

@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { findProduct, formatINR } from "../lib/products";
@@ -11,6 +12,11 @@ export function ProductDetail() {
     const product = findProduct(id);
     const { add } = useCart();
     const navigate = useNavigate();
+
+    // Scroll to top on mount
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [id]);
 
     if (!product) {
         return (

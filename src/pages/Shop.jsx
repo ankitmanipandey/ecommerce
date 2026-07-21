@@ -10,6 +10,11 @@ export function Shop() {
     // Initialize the filter based on the passed state, defaulting to "All"
     const [filter, setFilter] = useState(location.state?.category || "All");
 
+    // Scroll to top on mount or when location state changes
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location.state]);
+
     // Listen for changes in the navigation state (e.g., clicking the "Shop" link in the nav bar)
     useEffect(() => {
         if (location.state?.category) {
@@ -24,6 +29,7 @@ export function Shop() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
+            {/* Main fade-in */}
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 md:px-8 md:py-16 animate-in fade-in duration-700 ease-out">
 
                 <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
