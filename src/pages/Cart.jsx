@@ -17,8 +17,8 @@ export function CartPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteNav />
-      {/* Main fade-in */}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 md:px-8 md:py-16 animate-in fade-in duration-700 ease-out">
+      {/* Main fade-in with adjusted padding: pt-10 pb-32 for mobile (clears bottom nav), md:pt-16 md:pb-24 for desktop */}
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h1 className="font-serif text-4xl text-primary md:text-5xl">Your Cart</h1>

@@ -58,14 +58,15 @@ export function Checkout() {
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
             {/* Main fade-in */}
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 md:px-8 md:py-16 animate-in fade-in duration-700 ease-out">
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-12 md:px-8 md:pt-16 animate-in fade-in duration-700 ease-out">
 
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <h1 className="font-serif text-4xl text-primary md:text-5xl">Checkout</h1>
                     <p className="mt-1 text-sm text-muted-foreground">Pay with Cash on Delivery. Our team will confirm on WhatsApp.</p>
                 </div>
 
-                <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
+                {/* Added mb-28 on mobile to ensure the grid pushes the scroll boundary down */}
+                <div className="mt-8 mb-28 md:mb-16 grid gap-8 lg:grid-cols-[1fr_400px]">
                     <form
                         onSubmit={place}
                         className="space-y-5 rounded-2xl bg-card p-6 ring-1 ring-border md:p-8 animate-in fade-in slide-in-from-bottom-6 duration-500 fill-mode-both"
@@ -95,8 +96,9 @@ export function Checkout() {
                         </Button>
                     </form>
 
+                    {/* Changed h-fit to h-auto on mobile (lg:h-fit) to prevent bounding box clipping on iOS/mobile browsers */}
                     <aside
-                        className="h-fit rounded-2xl bg-card p-6 ring-1 ring-border animate-in fade-in slide-in-from-bottom-6 duration-500 fill-mode-both"
+                        className="h-auto lg:h-fit rounded-2xl bg-card p-6 ring-1 ring-border animate-in fade-in slide-in-from-bottom-6 duration-500 fill-mode-both"
                         style={{ animationDelay: "250ms" }}
                     >
                         <h2 className="font-serif text-2xl text-primary">Order summary</h2>
@@ -125,6 +127,9 @@ export function Checkout() {
                         )}
                     </aside>
                 </div>
+
+                {/* Invisible physical spacer explicitly clearing the mobile fixed bottom nav */}
+                <div className="h-28 w-full block md:hidden shrink-0" aria-hidden="true" />
             </main>
             <SiteFooter />
 

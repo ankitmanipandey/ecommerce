@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Menu, X, User } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ShoppingBag, User, Home, Store, LayoutGrid, Search, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, signup, logout } from "../store/authSlice";
 import { useCart } from "../lib/cart";
+import { products, formatINR } from "../lib/products";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -12,9 +13,21 @@ import { toast } from "sonner";
 
 export function SiteNav() {
     const { count } = useCart();
-    const location = useLocation(); // Gets the current route path
+    const location = useLocation();
 
-    const [open, setOpen] = useState(false);
+    // Search State
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const searchInputRef = useRef(null);
+
+    // Auto-focus search input when opened
+    useEffect(() => {
+        if (isSearchOpen && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [isSearchOpen]);
+
+    // Auth State
     const [authOpen, setAuthOpen] = useState(false);
     const [authMode, setAuthMode] = useState("signin");
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -22,18 +35,14 @@ export function SiteNav() {
     const dispatch = useDispatch();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-    // Prevent scrolling on the main page when the mobile drawer is open
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
-        }
-        return () => { document.body.style.overflow = "unset"; };
-    }, [open]);
-
     const handleAuth = (e) => {
         e.preventDefault();
+
+        // Force mobile keyboard/dropdown to dismiss cleanly to prevent fixed layout bugs
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+
         setAuthOpen(false);
 
         if (authMode === "signin") {
@@ -52,22 +61,33 @@ export function SiteNav() {
     };
 
     const handleModalClose = (isOpen) => {
-        setAuthOpen(isOpen);
         if (!isOpen) {
+            // Force mobile keyboard/dropdown to dismiss cleanly to prevent fixed layout bugs
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
             setTimeout(() => setAuthMode("signin"), 300);
         }
+        setAuthOpen(isOpen);
     };
 
-    // Array of navigation items for easy mapping and active-state checking
     const navItems = [
         { name: "Home", path: "/" },
         { name: "Shop", path: "/shop" },
         { name: "Categories", path: "/categories" },
     ];
 
-    // Reusable Cart Icon to keep code clean
+    // Live search filtering
+    const searchResults = searchQuery.trim() === ""
+        ? []
+        : products.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.category.toLowerCase().includes(searchQuery.toLowerCase())
+        ).slice(0, 6); // Limit results to max 6 to prevent overwhelming the screen
+
+    // Reusable Desktop Cart Icon
     const CartButton = () => (
-        <Link to="/cart" onClick={() => setOpen(false)} className="relative rounded-full p-2 hover:bg-secondary transition cursor-pointer" aria-label="Cart">
+        <Link to="/cart" className="relative rounded-full p-2 hover:bg-secondary transition cursor-pointer" aria-label="Cart">
             <ShoppingBag className="h-5 w-5" />
             {count > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground transition-transform animate-in zoom-in">
@@ -78,139 +98,191 @@ export function SiteNav() {
     );
 
     return (
-        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-md">
+        <>
+            {/* Global Style override to prevent Radix UI layout shift (shrinking background) */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                body[data-scroll-locked] {
+                    padding-right: 0 !important;
+                }
+            `}} />
 
-            {/* MAIN NAVBAR GRID */}
-            <div className="mx-auto grid h-16 max-w-7xl grid-cols-3 items-center px-4 md:px-8">
+            {/* TOP NAVIGATION */}
+            <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-md">
+                <div className="mx-auto flex h-18 max-w-7xl items-center px-4 md:px-8 gap-3 md:gap-6">
 
-                {/* LEFT: Mobile Menu Button */}
-                <div className="flex justify-start md:hidden">
-                    <button className="p-2 -ml-2 cursor-pointer text-foreground transition-colors hover:text-primary" onClick={() => setOpen(true)} aria-label="Menu">
-                        <Menu className="h-6 w-6" />
-                    </button>
-                </div>
-
-                {/* LEFT: Desktop Logo */}
-                <div className="hidden md:flex justify-start">
-                    <Link to="/" className="flex items-center gap-1 transition-opacity hover:opacity-80">
-                        <span className="font-serif text-2xl font-bold tracking-tight text-primary">Loomzo</span>
-                        <span className="text-[10px] uppercase tracking-[0.3em] text-accent">India</span>
-                    </Link>
-                </div>
-
-                {/* CENTER: Mobile Logo & Desktop Links */}
-                <div className="flex justify-center">
-                    {/* Mobile Only Logo */}
-                    <Link to="/" className="flex md:hidden items-center transition-opacity hover:opacity-80">
-                        <span className="font-serif text-2xl font-bold tracking-tight text-primary">Loomzo</span>
+                    {/* Left Oriented, Authentic Branding Logo (Always Visible) */}
+                    <Link to="/" className="flex items-baseline gap-1 transition-opacity hover:opacity-80 shrink-0 z-10">
+                        <span className="font-serif text-4xl md:text-[2.5rem] leading-none font-medium tracking-tight text-primary">Loomzo</span>
+                        <span className="text-[10px] uppercase tracking-[0.3em] text-accent hidden md:inline">India</span>
                     </Link>
 
-                    {/* Desktop Only Navigation Links with Active State */}
-                    <nav className="hidden items-center gap-8 md:flex">
-                        {navItems.map((item) => {
-                            const isActive = location.pathname === item.path;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    to={item.path}
-                                    className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isActive ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                    {/* Dynamic Container (Takes up remaining space, switches between Nav and Search) */}
+                    <div className="flex flex-1 items-center justify-end relative h-full">
+
+                        {/* NORMAL STATE: Nav Links & Action Icons */}
+                        <div className={`flex items-center gap-2 md:gap-8 transition-all duration-300 ease-in-out ${isSearchOpen ? 'opacity-0 invisible scale-95 pointer-events-none' : 'opacity-100 visible scale-100 pointer-events-auto'}`}>
+                            {/* Desktop Only Navigation Links */}
+                            <nav className="hidden items-center gap-8 md:flex">
+                                {navItems.map((item) => {
+                                    const isActive = location.pathname === item.path;
+                                    return (
+                                        <Link
+                                            key={item.name}
+                                            to={item.path}
+                                            className={`text-sm font-medium tracking-wide transition-colors hover:text-primary ${isActive ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+
+                            {/* Right Actions */}
+                            <div className="flex items-center gap-1 md:gap-4 shrink-0">
+                                {/* Search Icon Trigger */}
+                                <button
+                                    onClick={() => setIsSearchOpen(true)}
+                                    className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary"
                                 >
-                                    {item.name}
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                                    <Search className="h-6 w-6 md:h-5 md:w-5" />
+                                </button>
+
+                                {/* Desktop Only: Auth & Cart Icons */}
+                                <div className="hidden md:flex items-center gap-4">
+                                    {isAuthenticated ? (
+                                        <>
+                                            <span className="text-sm font-medium text-primary flex items-center gap-2">
+                                                <User className="h-4 w-4" /> {user?.name}
+                                            </span>
+                                            <Button variant="ghost" size="sm" onClick={handleLogout} className="cursor-pointer">
+                                                Sign out
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button variant="ghost" size="sm" onClick={() => setAuthOpen(true)} className="cursor-pointer">
+                                            Sign in
+                                        </Button>
+                                    )}
+                                    <CartButton />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SEARCH STATE: Expands up to Logo dynamically */}
+                        <div className={`absolute inset-y-0 right-0 flex items-center w-full transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible translate-x-0 pointer-events-auto' : 'opacity-0 invisible translate-x-8 pointer-events-none'}`}>
+                            <div className="flex w-full items-center gap-2 md:gap-3">
+                                <div className="flex flex-1 items-center bg-secondary/40 rounded-full pl-4 pr-2 h-11 md:h-12 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
+                                    <Search className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0 mr-2 md:mr-3" />
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        placeholder="Banarasee Silk, Wedding Sarees..."
+                                        className="flex-1 bg-transparent h-full outline-none text-sm md:text-base font-serif placeholder:text-muted-foreground/70 text-foreground w-full"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="p-1.5 hover:bg-background/80 rounded-full text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                                        >
+                                            <X className="h-3 w-3 md:h-4 md:w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                                    className="p-2 shrink-0 hover:bg-secondary rounded-full cursor-pointer transition-colors text-foreground"
+                                    aria-label="Close search"
+                                >
+                                    <X className="h-5 w-5 md:h-6 md:w-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
-                {/* RIGHT: Auth & Cart Icons */}
-                <div className="flex justify-end items-center gap-1 md:gap-2">
-
-                    {/* Mobile Auth Icon */}
-                    <div className="md:hidden">
-                        {isAuthenticated ? (
-                            <button onClick={handleLogout} className="relative rounded-full p-2 hover:bg-secondary transition cursor-pointer" aria-label="Account">
-                                <User className="h-5 w-5 text-primary" />
-                            </button>
-                        ) : (
-                            <button onClick={() => setAuthOpen(true)} className="relative rounded-full p-2 hover:bg-secondary transition cursor-pointer" aria-label="Sign In">
-                                <User className="h-5 w-5" />
-                            </button>
-                        )}
+                {/* Search Results Dropdown */}
+                {isSearchOpen && searchQuery.trim() !== "" && (
+                    <div className="absolute top-18 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border/60 shadow-xl max-h-[70vh] overflow-y-auto z-40 animate-in fade-in slide-in-from-top-2">
+                        <div className="max-w-7xl mx-auto p-4 md:p-8">
+                            {searchResults.length > 0 ? (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {searchResults.map(p => (
+                                        <Link
+                                            key={p.id}
+                                            to={`/product/${p.id}`}
+                                            onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-secondary transition-colors border border-transparent hover:border-border"
+                                        >
+                                            <img src={p.image} alt={p.name} className="h-20 w-16 object-cover rounded-md shadow-sm" />
+                                            <div>
+                                                <p className="text-[10px] uppercase tracking-widest text-accent mb-0.5">{p.category}</p>
+                                                <p className="font-serif text-primary text-base line-clamp-1">{p.name}</p>
+                                                <p className="text-sm font-semibold mt-1">{formatINR(p.price)}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="font-serif text-lg text-primary">No authentic weaves found for "{searchQuery}"</p>
+                                    <p className="text-sm text-muted-foreground mt-2">Try searching for a different category or style.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                )}
+            </header>
 
-                    {/* Desktop Auth Buttons */}
-                    <div className="hidden md:flex items-center gap-4 mr-2">
-                        {isAuthenticated ? (
-                            <>
-                                <span className="text-sm font-medium text-primary flex items-center gap-2">
-                                    <User className="h-4 w-4" /> {user?.name}
-                                </span>
-                                <Button variant="ghost" size="sm" onClick={handleLogout} className="cursor-pointer">
-                                    Sign out
-                                </Button>
-                            </>
-                        ) : (
-                            <Button variant="ghost" size="sm" onClick={() => setAuthOpen(true)} className="cursor-pointer">
-                                Sign in
-                            </Button>
-                        )}
-                    </div>
+            {/* MOBILE BOTTOM NAVIGATION BAR (Flipkart style) - Added transform-gpu to fix mobile paint bugs */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-md pb-safe transform-gpu">
+                <div className="flex h-17 justify-around items-center px-2 text-[10px] font-medium text-muted-foreground">
 
-                    {/* Cart always on the right */}
-                    <CartButton />
-                </div>
-            </div>
+                    <Link to="/" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/' ? 'text-primary' : 'hover:text-foreground'}`}>
+                        <Home className="h-5.5 w-5.5" />
+                        <span>Home</span>
+                    </Link>
 
-            {/* MOBILE SIDE DRAWER OVERLAY */}
-            {open && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden animate-in fade-in duration-300"
-                    onClick={() => setOpen(false)}
-                />
-            )}
+                    <Link to="/categories" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/categories' ? 'text-primary' : 'hover:text-foreground'}`}>
+                        <LayoutGrid className="h-5.5 w-5.5" />
+                        <span>Categories</span>
+                    </Link>
 
-            {/* MOBILE SIDE DRAWER PANEL */}
-            <div
-                className={`fixed top-0 left-0 z-50 h-dvh w-[80vw] max-w-sm bg-background border-r border-border shadow-2xl transition-transform duration-300 ease-in-out md:hidden flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}
-            >
-                {/* Drawer Header */}
-                <div className="flex items-center justify-between border-b border-border/60 px-6 py-5 bg-background">
-                    <span className="font-serif text-2xl font-bold tracking-tight text-primary">Loomzo</span>
-                    <button className="rounded-full p-2 -mr-2 bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-primary cursor-pointer transition-colors" onClick={() => setOpen(false)}>
-                        <X className="h-5 w-5" />
+                    <Link to="/shop" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/shop' ? 'text-primary' : 'hover:text-foreground'}`}>
+                        <Store className="h-5.5 w-5.5" />
+                        <span>Shop</span>
+                    </Link>
+
+                    <button
+                        onClick={() => isAuthenticated ? handleLogout() : setAuthOpen(true)}
+                        className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
+                    >
+                        <User className="h-5.5 w-5.5" />
+                        <span>Account</span>
                     </button>
-                </div>
 
-                {/* Drawer Menu Options (Redesigned UI with Active Highlight) */}
-                <div className="flex flex-col p-4 overflow-y-auto bg-background flex-1 gap-2">
-                    {navItems.map((item) => {
-                        const isActive = location.pathname === item.path;
-                        return (
-                            <Link
-                                key={item.name}
-                                to={item.path}
-                                onClick={() => setOpen(false)}
-                                className={`rounded-xl px-4 py-3 text-lg font-serif tracking-wide transition-all ${isActive
-                                    ? "bg-primary/10 text-primary font-semibold shadow-sm"
-                                    : "text-foreground hover:bg-secondary/60 hover:text-primary"
-                                    }`}
-                            >
-                                {item.name}
-                            </Link>
-                        );
-                    })}
-                </div>
+                    <Link to="/cart" className={`flex flex-col items-center gap-1.5 relative transition-colors ${location.pathname === '/cart' ? 'text-primary' : 'hover:text-foreground'}`}>
+                        <div className="relative">
+                            <ShoppingBag className="h-5.5 w-5.5" />
+                            {count > 0 && (
+                                <span className="absolute -right-2 -top-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                                    {count}
+                                </span>
+                            )}
+                        </div>
+                        <span>Cart</span>
+                    </Link>
 
-                {/* Optional subtle footer for the drawer */}
-                <div className="p-6 border-t border-border/60 bg-secondary/20">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Authentic Weaves</p>
-                    <p className="text-sm font-serif text-foreground">Crafted with love in India.</p>
                 </div>
-            </div>
+            </nav>
 
             {/* AUTH MODAL WITH SMOOTH TRANSITIONS */}
+            {/* Added w-[90vw], max-w-[380px], and rounded-3xl to ensure it doesn't touch the screen edges and looks elegant */}
             <Dialog open={authOpen} onOpenChange={handleModalClose}>
-                <DialogContent className="max-w-md p-6 transition-all duration-300">
+                <DialogContent className="w-[90vw] max-w-95 rounded-3xl p-6 transition-all duration-300 md:max-w-md">
                     <div className="text-center mb-6 relative min-h-20">
                         <div className={`absolute inset-0 transition-all duration-500 ease-in-out ${authMode === "signin" ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
                             <h2 className="font-serif text-3xl text-primary">Sign In</h2>
@@ -291,13 +363,13 @@ export function SiteNav() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </header>
+        </>
     );
 }
 
 export function SiteFooter() {
     return (
-        <footer className="mt-20 border-t border-border/60 bg-secondary/20 transition-colors">
+        <footer className="hidden md:block mt-20 border-t border-border/60 bg-secondary/20 transition-colors">
             <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-4 md:gap-8 md:px-8">
 
                 <div className="md:col-span-2">
@@ -313,15 +385,12 @@ export function SiteFooter() {
                     <h3 className="text-sm font-semibold tracking-wider text-foreground uppercase">Shop Collections</h3>
                     <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                         <li>
-                            {/* Updated with state={{ category: "Youth & Trend" }} */}
                             <Link to="/shop" state={{ category: "Youth & Trend" }} className="hover:text-primary transition-colors duration-200">Youth &amp; Trend</Link>
                         </li>
                         <li>
-                            {/* Updated with state={{ category: "Festive & Bridal" }} */}
                             <Link to="/shop" state={{ category: "Festive & Bridal" }} className="hover:text-primary transition-colors duration-200">Festive &amp; Bridal</Link>
                         </li>
                         <li>
-                            {/* Updated with state={{ category: "Timeless Elegance" }} */}
                             <Link to="/shop" state={{ category: "Timeless Elegance" }} className="hover:text-primary transition-colors duration-200">Timeless Elegance</Link>
                         </li>
                     </ul>

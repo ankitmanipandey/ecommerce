@@ -13,7 +13,9 @@ export function Categories() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
-            <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-16 md:px-8 md:py-24 animate-in fade-in duration-700 ease-out">
+
+            {/* Adjusted padding: pt-10 pb-32 for mobile (clears bottom nav), md:pt-16 md:pb-24 for desktop */}
+            <main className="mx-auto flex-1 w-full max-w-7xl px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
                 <div className="mb-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <p className="text-xs uppercase tracking-[0.3em] text-accent">Curated Collections</p>

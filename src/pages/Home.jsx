@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { categories, products, formatINR } from "../lib/products.js";
-import hero from "../assets/hero.jpg";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+
+// Import your existing and new carousel images here
+import hero1 from "../assets/hero.jpg";
+import hero2 from "../assets/hero2.jpg"; // Lady wearing Banarasee Organza
+import hero3 from "../assets/hero3.jpg"; // Married woman wearing heavy Emerald Brocade
 
 export function Home() {
     // Scroll to top on mount
@@ -12,15 +16,112 @@ export function Home() {
         window.scrollTo(0, 0);
     }, []);
 
+    // --- BULLETPROOF CAROUSEL LOGIC ---
+    const carouselSlides = [
+        { id: "3", image: hero1, alt: "Woman in a maroon and gold Loomzo saree" },
+        { id: "2", image: hero2, alt: "Lady wearing a beautiful Banarasee Organza saree" },
+        { id: "4", image: hero3, alt: "Married woman wearing a heavy Emerald Brocade saree" },
+    ];
+
+    // Create an extended array with clones at both ends for perfect infinite looping
+    const extendedSlides = [
+        carouselSlides[carouselSlides.length - 1], // Clone of last
+        ...carouselSlides,                         // Original slides
+        carouselSlides[0]                          // Clone of first
+    ];
+
+    // Start at index 1 (the first real slide)
+    const [currentIndex, setCurrentIndex] = useState(1);
+    const [isHovered, setIsHovered] = useState(false);
+    const [transitionEnabled, setTransitionEnabled] = useState(true);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
+
+    const nextSlide = useCallback(() => {
+        if (isAnimating) return;
+        setTransitionEnabled(true);
+        setCurrentIndex((prev) => prev + 1);
+    }, [isAnimating]);
+
+    const prevSlide = useCallback(() => {
+        if (isAnimating) return;
+        setTransitionEnabled(true);
+        setCurrentIndex((prev) => prev - 1);
+    }, [isAnimating]);
+
+    // Auto-scroll every 4 seconds (Pauses on hover)
+    useEffect(() => {
+        if (isHovered) return;
+        const timer = setInterval(() => {
+            nextSlide();
+        }, 4000);
+        return () => clearInterval(timer);
+    }, [isHovered, nextSlide]);
+
+    // Handle the seamless reset when reaching the clones
+    useEffect(() => {
+        setIsAnimating(true);
+
+        // Wait for the CSS transition to finish (700ms)
+        const timer = setTimeout(() => {
+            if (currentIndex === extendedSlides.length - 1) {
+                // Reached the right clone, snap silently to the real first slide
+                setTransitionEnabled(false);
+                setCurrentIndex(1);
+            } else if (currentIndex === 0) {
+                // Reached the left clone, snap silently to the real last slide
+                setTransitionEnabled(false);
+                setCurrentIndex(extendedSlides.length - 2);
+            }
+            setIsAnimating(false);
+        }, 700);
+
+        return () => clearTimeout(timer);
+    }, [currentIndex, extendedSlides.length]);
+
+    // Re-enable transition right after a silent snap happens
+    useEffect(() => {
+        if (!transitionEnabled) {
+            const frame = requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setTransitionEnabled(true);
+                });
+            });
+            return () => cancelAnimationFrame(frame);
+        }
+    }, [transitionEnabled]);
+
+    // Calculate actual active dot index
+    let activeDotIndex = currentIndex - 1;
+    if (activeDotIndex < 0) activeDotIndex = carouselSlides.length - 1;
+    if (activeDotIndex >= carouselSlides.length) activeDotIndex = 0;
+
+    // Touch Handlers
+    const minSwipeDistance = 50;
+    const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+    const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        if (distance > minSwipeDistance) nextSlide();
+        if (distance < -minSwipeDistance) prevSlide();
+    };
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
             <main className="flex-1 animate-in fade-in duration-700 ease-out">
 
-                {/* HERO */}
+                {/* HERO SECTION */}
                 <section className="relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
-                    <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 md:grid-cols-2 md:gap-12 md:px-8 md:py-20">
+                    <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 pt-6 pb-12 md:grid-cols-2 md:gap-12 md:px-8 md:pt-10 md:pb-20">
 
+                        {/* Text Content */}
                         <div className="order-2 md:order-1 animate-in fade-in slide-in-from-bottom-8 duration-700">
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background/60 px-3 py-1 text-xs uppercase tracking-[0.25em] text-accent-foreground/80">
                                 <span className="h-1.5 w-1.5 rounded-full bg-accent" /> New Season Drop
@@ -39,17 +140,84 @@ export function Home() {
                                     <Link to="/categories">View categories</Link>
                                 </Button>
                             </div>
-                            <div className="mt-10 flex flex-wrap gap-6 text-xs uppercase tracking-widest text-muted-foreground">
+                            <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 text-xs uppercase tracking-widest text-muted-foreground">
                                 <span>✓ Cash on Delivery</span>
                                 <span>✓ Free Shipping in India</span>
-                                <span>✓ Easy Returns</span>
+                                {/* Highlighted Return Policy */}
+                                <span className="text-primary font-bold bg-primary/10 px-2 py-1 rounded-md">
+                                    ✓ 7-Day No-Questions-Asked Returns
+                                </span>
                             </div>
                         </div>
 
+                        {/* Image Carousel */}
                         <div className="order-1 md:order-2 animate-in fade-in duration-1000 slide-in-from-right-4">
                             <div className="relative mx-auto max-w-md md:max-w-none">
+                                {/* Glow Effect */}
                                 <div className="absolute -inset-4 rounded-4xl bg-accent/20 blur-2xl" />
-                                <img src={hero} alt="Woman in a maroon and gold Loomzo saree" width={1600} height={1200} className="relative aspect-4/5 w-full rounded-3xl object-cover shadow-(--shadow-luxe)" />
+
+                                {/* Carousel Container */}
+                                <div
+                                    className="relative overflow-hidden rounded-3xl shadow-(--shadow-luxe) aspect-4/5 group bg-secondary/50"
+                                    onMouseEnter={() => setIsHovered(true)}
+                                    onMouseLeave={() => setIsHovered(false)}
+                                    onTouchStart={onTouchStart}
+                                    onTouchMove={onTouchMove}
+                                    onTouchEnd={onTouchEnd}
+                                >
+                                    {/* Slides Wrapper */}
+                                    <div
+                                        className={`flex h-full w-full ${transitionEnabled ? "transition-transform duration-700 ease-in-out" : ""}`}
+                                        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                                    >
+                                        {extendedSlides.map((slide, index) => (
+                                            <Link
+                                                key={`${slide.id}-${index}`}
+                                                to={`/product/${slide.id}`}
+                                                className="relative h-full w-full shrink-0 cursor-pointer block"
+                                            >
+                                                <img
+                                                    src={slide.image}
+                                                    alt={slide.alt}
+                                                    width={1600}
+                                                    height={1200}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </Link>
+                                        ))}
+                                    </div>
+
+                                    {/* Carousel Dots */}
+                                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                                        {carouselSlides.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => {
+                                                    setTransitionEnabled(true);
+                                                    setCurrentIndex(i + 1); // +1 because index 0 is a clone
+                                                }}
+                                                className={`h-2 rounded-full transition-all duration-300 ${activeDotIndex === i ? "bg-white w-5" : "bg-white/50 w-2 hover:bg-white/80"} cursor-pointer`}
+                                                aria-label={`Go to slide ${i + 1}`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Carousel Arrows (Visible on Desktop Hover) */}
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/20 backdrop-blur-sm p-2 rounded-full text-white opacity-0 md:group-hover:opacity-100 transition-opacity z-10 hover:bg-black/40 cursor-pointer"
+                                        aria-label="Previous slide"
+                                    >
+                                        <ChevronLeft className="h-6 w-6" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/20 backdrop-blur-sm p-2 rounded-full text-white opacity-0 md:group-hover:opacity-100 transition-opacity z-10 hover:bg-black/40 cursor-pointer"
+                                        aria-label="Next slide"
+                                    >
+                                        <ChevronRight className="h-6 w-6" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -89,7 +257,7 @@ export function Home() {
 
                 {/* BEST SELLERS */}
                 <section className="bg-secondary/40">
-                    <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+                    <div className="mx-auto max-w-7xl px-4 py-16 pb-28 md:px-8 md:py-24 md:pb-24">
                         <div className="mb-10 flex items-end justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.3em] text-accent">Bestsellers</p>

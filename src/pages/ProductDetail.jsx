@@ -22,7 +22,8 @@ export function ProductDetail() {
         return (
             <div className="flex min-h-screen flex-col bg-background">
                 <SiteNav />
-                <main className="mx-auto flex flex-1 flex-col items-center justify-center px-4 py-16 text-center animate-in fade-in duration-500">
+                {/* Adjusted padding for "Not Found" view */}
+                <main className="mx-auto flex flex-1 flex-col items-center justify-center px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 text-center animate-in fade-in duration-500">
                     <h1 className="font-serif text-3xl text-primary">Product not found</h1>
                     <p className="mt-2 text-muted-foreground">The item you are looking for does not exist.</p>
                     <Button asChild className="mt-6"><Link to="/shop">Back to shop</Link></Button>
@@ -40,8 +41,8 @@ export function ProductDetail() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
-            {/* Main fade-in */}
-            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8 md:py-14 animate-in fade-in duration-700 ease-out">
+            {/* Main fade-in with adjusted padding: pt-10 pb-32 for mobile, md:pt-16 md:pb-24 for desktop */}
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
                 <nav className="mb-6 text-xs uppercase tracking-widest text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <Link to="/shop" className="hover:text-primary transition-colors">Shop</Link> / <span className="text-primary">{product.category}</span>
