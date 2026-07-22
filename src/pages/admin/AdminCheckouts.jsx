@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 const getTimeAgo = (timestamp) => {
     const now = new Date();

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { Activity, Clock } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 const formatTimeOnSite = (joinTime, endTime) => {
     const diffMs = endTime - joinTime;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { BarChart3, Smartphone, MousePointer, ShoppingBag, CheckCircle2, XCircle } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 const getTimeAgo = (timestamp) => {
     const diffMins = Math.floor((new Date() - new Date(timestamp)) / 60000);

@@ -5,7 +5,7 @@ import { ArrowUpRight, MousePointerClick, ShoppingCart, IndianRupee, Users, Bank
 // Adjust this import path if your products.js is located somewhere else!
 import { formatINR } from "../../lib/products";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 export function AdminDashboard() {
     const [stats, setStats] = useState({
