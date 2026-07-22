@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, User, Home, Store, LayoutGrid, Search, X, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, User, Home, Store, LayoutGrid, Search, X, LayoutDashboard, LogOut } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, signup, logout } from "../store/authSlice";
@@ -277,10 +277,19 @@ export function SiteNav() {
 
                     <button
                         onClick={() => isAuthenticated ? handleLogout() : setAuthOpen(true)}
-                        className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated && !location.pathname.startsWith('/admin') ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
+                        className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
                     >
-                        <User className="h-5.5 w-5.5" />
-                        <span>Account</span>
+                        {isAuthenticated ? (
+                            <>
+                                <LogOut className="h-5.5 w-5.5" />
+                                <span>Logout</span>
+                            </>
+                        ) : (
+                            <>
+                                <User className="h-5.5 w-5.5" />
+                                <span>Account</span>
+                            </>
+                        )}
                     </button>
 
                     <Link to="/cart" className={`flex flex-col items-center gap-1.5 relative transition-colors ${location.pathname === '/cart' ? 'text-primary' : 'hover:text-foreground'}`}>
@@ -341,7 +350,6 @@ export function SiteNav() {
                             />
                         </div>
 
-                        {/* ⚡ NEW: Mobile Input Field for Signup */}
                         <div className={`grid transition-all duration-400 ease-in-out ${authMode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                             <div className="overflow-hidden">
                                 <div className="space-y-1 pb-1">
