@@ -46,6 +46,21 @@ export function AdminVisitors() {
     // Filter to count only online users for the top badge
     const onlineCount = visitors.filter(v => v.isOnline).length;
 
+    // Sort users: Online first, then by last seen (offlineAt) ascending
+    const sortedVisitors = [...visitors].sort((a, b) => {
+        // 1. Online users on top
+        if (a.isOnline && !b.isOnline) return -1;
+        if (!a.isOnline && b.isOnline) return 1;
+
+        // 2. Sort the rest in ascending order
+        if (!a.isOnline && !b.isOnline) {
+            return a.offlineAt - b.offlineAt; // Ascending based on when they went offline
+        }
+
+        // If both are online, sort by join time ascending
+        return a.joinTime - b.joinTime;
+    });
+
     return (
         <div className="animate-in fade-in duration-500">
             <h1 className="font-serif text-2xl md:text-3xl text-primary">Live Visitors & Logs</h1>
@@ -64,14 +79,14 @@ export function AdminVisitors() {
 
                 {/* Visitor Log List */}
                 <div className="p-4 md:p-6">
-                    {visitors.length === 0 ? (
+                    {sortedVisitors.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                             <Clock className="mb-2 h-8 w-8 opacity-20" />
                             <p className="text-sm">No visitor history logged yet.</p>
                         </div>
                     ) : (
                         <div className="space-y-3 md:space-y-4">
-                            {visitors.map((user) => (
+                            {sortedVisitors.map((user) => (
                                 <div
                                     key={user.socketId}
                                     className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4 shadow-sm transition-all ${user.isOnline

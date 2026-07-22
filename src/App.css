@@ -50,6 +50,17 @@
 }
 
 @layer base {
+
+  html,
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+  }
+
   :root {
     --radius: 0.5rem;
     /* Loomzo palette: warm cream bg, deep maroon primary, warm gold accent */

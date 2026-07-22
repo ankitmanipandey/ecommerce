@@ -29,7 +29,6 @@ export function SiteNav() {
 
     const [authOpen, setAuthOpen] = useState(false);
     const [authMode, setAuthMode] = useState("signin");
-    // ⚡ UPDATE: Added mobile to initial state
     const [formData, setFormData] = useState({ name: "", email: "", mobile: "", password: "" });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -47,7 +46,6 @@ export function SiteNav() {
 
         try {
             const endpoint = authMode === "signin" ? "/api/auth/login" : "/api/auth/signup";
-            // ⚡ UPDATE: Passed mobile to the backend during signup
             const payload = authMode === "signin"
                 ? { email: formData.email, password: formData.password }
                 : { name: formData.name, email: formData.email, mobile: formData.mobile, password: formData.password };
@@ -276,13 +274,6 @@ export function SiteNav() {
                         <Store className="h-5.5 w-5.5" />
                         <span>Shop</span>
                     </Link>
-
-                    {user?.role === "admin" && (
-                        <Link to="/admin" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname.startsWith('/admin') ? 'text-primary' : 'hover:text-foreground'}`}>
-                            <LayoutDashboard className="h-5.5 w-5.5" />
-                            <span>Admin</span>
-                        </Link>
-                    )}
 
                     <button
                         onClick={() => isAuthenticated ? handleLogout() : setAuthOpen(true)}
