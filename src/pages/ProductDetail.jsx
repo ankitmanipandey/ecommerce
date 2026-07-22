@@ -5,7 +5,8 @@ import { Button } from "../components/ui/button";
 import { findProduct, formatINR } from "../lib/products";
 import { useCart } from "../lib/cart";
 import { toast } from "sonner";
-import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star } from "lucide-react"; // Imported Star
+import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star } from "lucide-react";
+import { trackEvent } from "../lib/tracker";
 
 export function ProductDetail() {
     const { id } = useParams();
@@ -13,10 +14,20 @@ export function ProductDetail() {
     const { add } = useCart();
     const navigate = useNavigate();
 
-    // Scroll to top on mount
+    // Scroll to top and track direct visits
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, [id]);
+
+        // ⚡ Ensure tracking works for direct links (but deduped via sessionStorage)
+        if (product) {
+            const tracked = JSON.parse(sessionStorage.getItem("loomzo_tracked_products") || "[]");
+            if (!tracked.includes(product.name)) {
+                tracked.push(product.name);
+                sessionStorage.setItem("loomzo_tracked_products", JSON.stringify(tracked));
+                trackEvent("product_click", { productName: product.name });
+            }
+        }
+    }, [id, product]);
 
     if (!product) {
         return (
@@ -61,7 +72,6 @@ export function ProductDetail() {
                         <p className="text-xs uppercase tracking-[0.3em] text-accent">{product.category}</p>
                         <h1 className="mt-2 font-serif text-4xl text-primary md:text-5xl">{product.name}</h1>
 
-                        {/* THE NEW STAR RATING SECTION */}
                         <div className="mt-2.5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
                             <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                             <span className="text-foreground/80">4.9</span>

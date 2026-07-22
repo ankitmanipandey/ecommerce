@@ -11,6 +11,7 @@ import { formatINR } from "../lib/products";
 import { toast } from "sonner";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { z } from "zod";
+import { trackEvent } from "../lib/tracker";
 
 const schema = z.object({
     fullName: z.string().trim().min(2, "Enter your full name").max(80),
@@ -26,10 +27,21 @@ export function Checkout() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    // Scroll to top on mount
+    // ⚡ FIX: Correctly track when the cart changes, avoiding stale sessions
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, []);
+
+        if (items.length > 0) {
+            const cartItemsString = items.map(item => item.product.name).join(" + ");
+            const lastTrackedCart = sessionStorage.getItem("loomzo_last_cart");
+
+            // Only send event if they actually changed what's in their cart
+            if (lastTrackedCart !== cartItemsString) {
+                sessionStorage.setItem("loomzo_last_cart", cartItemsString);
+                trackEvent("checkout_view", { productName: cartItemsString });
+            }
+        }
+    }, [items]);
 
     const place = async (e) => {
         e.preventDefault();
@@ -43,7 +55,18 @@ export function Checkout() {
             return;
         }
         setSubmitting(true);
+
         try {
+            await trackEvent("checkout_attempt", {
+                productName: items.map(item => item.product.name).join(", "),
+                orderTotal: total,
+                customerData: {
+                    name: form.fullName,
+                    whatsapp: form.whatsapp,
+                    address: form.address
+                }
+            });
+
             await new Promise((resolve) => setTimeout(resolve, 1000));
             setSuccess(true);
             clear();
@@ -57,15 +80,12 @@ export function Checkout() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
-            {/* Main fade-in */}
             <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-12 md:px-8 md:pt-16 animate-in fade-in duration-700 ease-out">
-
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <h1 className="font-serif text-4xl text-primary md:text-5xl">Checkout</h1>
                     <p className="mt-1 text-sm text-muted-foreground">Pay with Cash on Delivery. Our team will confirm on WhatsApp.</p>
                 </div>
 
-                {/* Added mb-28 on mobile to ensure the grid pushes the scroll boundary down */}
                 <div className="mt-8 mb-28 md:mb-16 grid gap-8 lg:grid-cols-[1fr_400px]">
                     <form
                         onSubmit={place}
@@ -96,7 +116,6 @@ export function Checkout() {
                         </Button>
                     </form>
 
-                    {/* Changed h-fit to h-auto on mobile (lg:h-fit) to prevent bounding box clipping on iOS/mobile browsers */}
                     <aside
                         className="h-auto lg:h-fit rounded-2xl bg-card p-6 ring-1 ring-border animate-in fade-in slide-in-from-bottom-6 duration-500 fill-mode-both"
                         style={{ animationDelay: "250ms" }}
@@ -127,8 +146,6 @@ export function Checkout() {
                         )}
                     </aside>
                 </div>
-
-                {/* Invisible physical spacer explicitly clearing the mobile fixed bottom nav */}
                 <div className="h-28 w-full block md:hidden shrink-0" aria-hidden="true" />
             </main>
             <SiteFooter />

@@ -2,13 +2,24 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
-import { categories, products, formatINR } from "../lib/products.js";
-import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react"; // Imported Star
+import { categories, products, formatINR, findProduct } from "../lib/products.js";
+import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
 
-// Import your existing and new carousel images here
 import hero1 from "../assets/hero.jpg";
 import hero2 from "../assets/hero2.jpg";
 import hero3 from "../assets/hero3.jpg";
+import { trackEvent } from "../lib/tracker.js";
+
+// ⚡ Helper: Prevent spam clicks per session
+const recordProductClick = (productName) => {
+    if (!productName) return;
+    const tracked = JSON.parse(sessionStorage.getItem("loomzo_tracked_products") || "[]");
+    if (!tracked.includes(productName)) {
+        tracked.push(productName);
+        sessionStorage.setItem("loomzo_tracked_products", JSON.stringify(tracked));
+        trackEvent("product_click", { productName });
+    }
+};
 
 export function Home() {
     useEffect(() => {
@@ -149,21 +160,25 @@ export function Home() {
                                         className={`flex h-full w-full ${transitionEnabled ? "transition-transform duration-700 ease-in-out" : ""}`}
                                         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                                     >
-                                        {extendedSlides.map((slide, index) => (
-                                            <Link
-                                                key={`${slide.id}-${index}`}
-                                                to={`/product/${slide.id}`}
-                                                className="relative h-full w-full shrink-0 cursor-pointer block"
-                                            >
-                                                <img
-                                                    src={slide.image}
-                                                    alt={slide.alt}
-                                                    width={1600}
-                                                    height={1200}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            </Link>
-                                        ))}
+                                        {extendedSlides.map((slide, index) => {
+                                            const pData = findProduct(slide.id); // ⚡ Get product data for tracking
+                                            return (
+                                                <Link
+                                                    key={`${slide.id}-${index}`}
+                                                    to={`/product/${slide.id}`}
+                                                    onClick={() => pData && recordProductClick(pData.name)} // ⚡ Track carousel click
+                                                    className="relative h-full w-full shrink-0 cursor-pointer block"
+                                                >
+                                                    <img
+                                                        src={slide.image}
+                                                        alt={slide.alt}
+                                                        width={1600}
+                                                        height={1200}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </Link>
+                                            )
+                                        })}
                                     </div>
 
                                     <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
@@ -220,7 +235,6 @@ export function Home() {
                                     <div className="aspect-4/5 overflow-hidden">
                                         <img src={featured?.image} alt={c.name} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                                     </div>
-                                    {/* Adjusted gradient and added drop-shadows for better text legibility */}
                                     <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-primary/95 via-primary/80 to-transparent p-6 text-primary-foreground">
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent drop-shadow-md">{c.tagline}</p>
                                         <h3 className="mt-1 font-serif text-2xl drop-shadow-lg">{c.name}</h3>
@@ -259,12 +273,15 @@ export function Home() {
 
 function ProductCard({ p }) {
     return (
-        <Link to={`/product/${p.id}`} className="group block h-full">
+        <Link
+            to={`/product/${p.id}`}
+            onClick={() => recordProductClick(p.name)} // ⚡ Track click safely
+            className="group block h-full"
+        >
             <div className="aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
                 <img src={p.image} alt={p.name} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
             </div>
             <div className="mt-3">
-                {/* Flex container added here for category text and mini star rating */}
                 <div className="flex items-center justify-between gap-2">
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
                         {p.category}

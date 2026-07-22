@@ -3,7 +3,19 @@ import { useState, useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { categories, products, formatINR } from "../lib/products";
 import { cn } from "../lib/utils";
-import { Star } from "lucide-react"; // Imported Star
+import { Star } from "lucide-react";
+import { trackEvent } from "../lib/tracker";
+
+// ⚡ Helper: Prevent spam clicks per session
+const recordProductClick = (productName) => {
+    if (!productName) return;
+    const tracked = JSON.parse(sessionStorage.getItem("loomzo_tracked_products") || "[]");
+    if (!tracked.includes(productName)) {
+        tracked.push(productName);
+        sessionStorage.setItem("loomzo_tracked_products", JSON.stringify(tracked));
+        trackEvent("product_click", { productName });
+    }
+};
 
 export function Shop() {
     const location = useLocation();
@@ -56,6 +68,7 @@ export function Shop() {
                         <Link
                             key={p.id}
                             to={`/product/${p.id}`}
+                            onClick={() => recordProductClick(p.name)} // ⚡ Track click safely
                             className="group block animate-in fade-in slide-in-from-bottom-6 fill-mode-both"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
@@ -70,7 +83,6 @@ export function Shop() {
                                 />
                             </div>
                             <div className="mt-3">
-                                {/* Added Flex container for category and star rating */}
                                 <div className="flex items-center justify-between gap-2">
                                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
                                         {p.category}

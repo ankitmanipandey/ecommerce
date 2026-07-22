@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, User, Home, Store, LayoutGrid, Search, X } from "lucide-react";
+import { ShoppingBag, User, Home, Store, LayoutGrid, Search, X, LayoutDashboard } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, signup, logout } from "../store/authSlice";
@@ -140,10 +140,20 @@ export function SiteNav() {
 
                             {/* Right Actions */}
                             <div className="flex items-center gap-1 md:gap-4 shrink-0">
+
+                                {/* NEW: Admin Panel Trigger */}
+                                <Link
+                                    to="/admin"
+                                    className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary shrink-0"
+                                    aria-label="Admin Dashboard"
+                                >
+                                    <LayoutDashboard className="h-6 w-6 md:h-5 md:w-5" />
+                                </Link>
+
                                 {/* Search Icon Trigger */}
                                 <button
                                     onClick={() => setIsSearchOpen(true)}
-                                    className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary"
+                                    className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary shrink-0"
                                 >
                                     <Search className="h-6 w-6 md:h-5 md:w-5" />
                                 </button>
@@ -280,7 +290,6 @@ export function SiteNav() {
             </nav>
 
             {/* AUTH MODAL WITH SMOOTH TRANSITIONS */}
-            {/* Added w-[90vw], max-w-[380px], and rounded-3xl to ensure it doesn't touch the screen edges and looks elegant */}
             <Dialog open={authOpen} onOpenChange={handleModalClose}>
                 <DialogContent className="w-[90vw] max-w-95 rounded-3xl p-6 transition-all duration-300 md:max-w-md">
                     <div className="text-center mb-6 relative min-h-20">
