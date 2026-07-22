@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { findProduct, formatINR } from "../lib/products";
 import { useCart } from "../lib/cart";
 import { toast } from "sonner";
-import { ShoppingBag, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star } from "lucide-react"; // Imported Star
 
 export function ProductDetail() {
     const { id } = useParams();
@@ -22,7 +22,6 @@ export function ProductDetail() {
         return (
             <div className="flex min-h-screen flex-col bg-background">
                 <SiteNav />
-                {/* Adjusted padding for "Not Found" view */}
                 <main className="mx-auto flex flex-1 flex-col items-center justify-center px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 text-center animate-in fade-in duration-500">
                     <h1 className="font-serif text-3xl text-primary">Product not found</h1>
                     <p className="mt-2 text-muted-foreground">The item you are looking for does not exist.</p>
@@ -41,7 +40,6 @@ export function ProductDetail() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
-            {/* Main fade-in with adjusted padding: pt-10 pb-32 for mobile, md:pt-16 md:pb-24 for desktop */}
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
                 <nav className="mb-6 text-xs uppercase tracking-widest text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -62,6 +60,15 @@ export function ProductDetail() {
                     >
                         <p className="text-xs uppercase tracking-[0.3em] text-accent">{product.category}</p>
                         <h1 className="mt-2 font-serif text-4xl text-primary md:text-5xl">{product.name}</h1>
+
+                        {/* THE NEW STAR RATING SECTION */}
+                        <div className="mt-2.5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <span className="text-foreground/80">4.9</span>
+                            <span className="mx-1 text-border">|</span>
+                            <span>120+ happy draped customers</span>
+                        </div>
+
                         <p className="mt-4 text-2xl font-semibold text-foreground">{formatINR(product.price)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes · Free shipping in India</p>
                         <p className="mt-6 text-base leading-relaxed text-muted-foreground">{product.description}</p>

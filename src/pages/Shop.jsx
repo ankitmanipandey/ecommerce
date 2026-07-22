@@ -3,19 +3,16 @@ import { useState, useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { categories, products, formatINR } from "../lib/products";
 import { cn } from "../lib/utils";
+import { Star } from "lucide-react"; // Imported Star
 
 export function Shop() {
     const location = useLocation();
-
-    // Initialize the filter based on the passed state, defaulting to "All"
     const [filter, setFilter] = useState(location.state?.category || "All");
 
-    // Scroll to top on mount or when location state changes
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [location.state]);
 
-    // Listen for changes in the navigation state (e.g., clicking the "Shop" link in the nav bar)
     useEffect(() => {
         if (location.state?.category) {
             setFilter(location.state.category);
@@ -29,7 +26,6 @@ export function Shop() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
-            {/* Adjusted padding: pt-10 pb-32 for mobile (clears bottom nav), md:pt-16 md:pb-24 for desktop */}
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
                 <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -74,9 +70,16 @@ export function Shop() {
                                 />
                             </div>
                             <div className="mt-3">
-                                <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
-                                    {p.category}
-                                </p>
+                                {/* Added Flex container for category and star rating */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
+                                        {p.category}
+                                    </p>
+                                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                        4.8
+                                    </div>
+                                </div>
                                 <h3 className="mt-1 font-serif text-lg text-primary">{p.name}</h3>
                                 <p className="text-sm font-semibold">{formatINR(p.price)}</p>
                             </div>

@@ -5,7 +5,6 @@ import { categories, products } from "../lib/products";
 import { ArrowRight } from "lucide-react";
 
 export function Categories() {
-    // Scroll to top on mount
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
@@ -14,7 +13,6 @@ export function Categories() {
         <div className="flex min-h-screen flex-col bg-background">
             <SiteNav />
 
-            {/* Adjusted padding: pt-10 pb-32 for mobile (clears bottom nav), md:pt-16 md:pb-24 for desktop */}
             <main className="mx-auto flex-1 w-full max-w-7xl px-4 pt-10 pb-32 md:px-8 md:pt-16 md:pb-24 animate-in fade-in duration-700 ease-out">
 
                 <div className="mb-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -45,10 +43,18 @@ export function Categories() {
                                         className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                     />
                                 </div>
-                                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-primary/90 via-primary/50 to-transparent p-6 text-primary-foreground">
-                                    <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{c.tagline}</p>
-                                    <h3 className="mt-1 font-serif text-2xl">{c.name}</h3>
-                                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium">
+
+                                {/* 1. Stretched the gradient higher with pt-28 and made the base color fully opaque */}
+                                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-primary via-primary/90 to-transparent p-6 pt-28 text-primary-foreground">
+
+                                    {/* 2. Changed text to crisp white (text-white/90), added font-bold, and a bottom margin (mb-1) */}
+                                    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-white/90 drop-shadow-md">
+                                        {c.tagline}
+                                    </p>
+
+                                    <h3 className="font-serif text-2xl text-white drop-shadow-lg">{c.name}</h3>
+
+                                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-white/90 drop-shadow-md">
                                         Explore collection <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
                                     </span>
                                 </div>
