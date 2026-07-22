@@ -11,48 +11,75 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
 
+const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 export function SiteNav() {
     const { count } = useCart();
     const location = useLocation();
 
-    // Search State
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef(null);
 
-    // Auto-focus search input when opened
     useEffect(() => {
         if (isSearchOpen && searchInputRef.current) {
             searchInputRef.current.focus();
         }
     }, [isSearchOpen]);
 
-    // Auth State
     const [authOpen, setAuthOpen] = useState(false);
     const [authMode, setAuthMode] = useState("signin");
-    const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+    // ⚡ UPDATE: Added mobile to initial state
+    const [formData, setFormData] = useState({ name: "", email: "", mobile: "", password: "" });
+    const [isLoading, setIsLoading] = useState(false);
 
     const dispatch = useDispatch();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-    const handleAuth = (e) => {
+    const handleAuth = async (e) => {
         e.preventDefault();
 
-        // Force mobile keyboard/dropdown to dismiss cleanly to prevent fixed layout bugs
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
         }
 
-        setAuthOpen(false);
+        setIsLoading(true);
 
-        if (authMode === "signin") {
-            dispatch(login({ email: formData.email, name: formData.email.split("@")[0] }));
-            toast.success("Welcome back to Loomzo!");
-        } else {
-            dispatch(signup({ email: formData.email, name: formData.name || "User" }));
-            toast.success("Account created successfully! Welcome to the tribe.");
+        try {
+            const endpoint = authMode === "signin" ? "/api/auth/login" : "/api/auth/signup";
+            // ⚡ UPDATE: Passed mobile to the backend during signup
+            const payload = authMode === "signin"
+                ? { email: formData.email, password: formData.password }
+                : { name: formData.name, email: formData.email, mobile: formData.mobile, password: formData.password };
+
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                if (authMode === "signin") {
+                    dispatch(login({ user: data.user, token: data.token }));
+                    toast.success(`Welcome back, ${data.user.name || 'to Loomzo'}!`);
+                } else {
+                    dispatch(signup({ user: data.user, token: data.token }));
+                    toast.success("Account created successfully! Welcome to the tribe.");
+                }
+
+                setAuthOpen(false);
+                setFormData({ name: "", email: "", mobile: "", password: "" });
+            } else {
+                toast.error(data.message || "Authentication failed.");
+            }
+        } catch (error) {
+            console.error("Auth Error:", error);
+            toast.error("Network error. Please try again later.");
+        } finally {
+            setIsLoading(false);
         }
-        setFormData({ name: "", email: "", password: "" });
     };
 
     const handleLogout = () => {
@@ -62,7 +89,6 @@ export function SiteNav() {
 
     const handleModalClose = (isOpen) => {
         if (!isOpen) {
-            // Force mobile keyboard/dropdown to dismiss cleanly to prevent fixed layout bugs
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
             }
@@ -77,15 +103,13 @@ export function SiteNav() {
         { name: "Categories", path: "/categories" },
     ];
 
-    // Live search filtering
     const searchResults = searchQuery.trim() === ""
         ? []
         : products.filter(p =>
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.category.toLowerCase().includes(searchQuery.toLowerCase())
-        ).slice(0, 6); // Limit results to max 6 to prevent overwhelming the screen
+        ).slice(0, 6);
 
-    // Reusable Desktop Cart Icon
     const CartButton = () => (
         <Link to="/cart" className="relative rounded-full p-2 hover:bg-secondary transition cursor-pointer" aria-label="Cart">
             <ShoppingBag className="h-5 w-5" />
@@ -99,7 +123,6 @@ export function SiteNav() {
 
     return (
         <>
-            {/* Global Style override to prevent Radix UI layout shift (shrinking background) */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 body[data-scroll-locked] {
@@ -107,22 +130,17 @@ export function SiteNav() {
                 }
             `}} />
 
-            {/* TOP NAVIGATION */}
             <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-md">
                 <div className="mx-auto flex h-18 max-w-7xl items-center px-4 md:px-8 gap-3 md:gap-6">
 
-                    {/* Left Oriented, Authentic Branding Logo (Always Visible) */}
                     <Link to="/" className="flex items-baseline gap-1 transition-opacity hover:opacity-80 shrink-0 z-10">
                         <span className="font-serif text-4xl md:text-[2.5rem] leading-none font-medium tracking-tight text-primary">Loomzo</span>
                         <span className="text-[10px] uppercase tracking-[0.3em] text-accent hidden md:inline">India</span>
                     </Link>
 
-                    {/* Dynamic Container (Takes up remaining space, switches between Nav and Search) */}
                     <div className="flex flex-1 items-center justify-end relative h-full">
 
-                        {/* NORMAL STATE: Nav Links & Action Icons */}
                         <div className={`flex items-center gap-2 md:gap-8 transition-all duration-300 ease-in-out ${isSearchOpen ? 'opacity-0 invisible scale-95 pointer-events-none' : 'opacity-100 visible scale-100 pointer-events-auto'}`}>
-                            {/* Desktop Only Navigation Links */}
                             <nav className="hidden items-center gap-8 md:flex">
                                 {navItems.map((item) => {
                                     const isActive = location.pathname === item.path;
@@ -138,19 +156,18 @@ export function SiteNav() {
                                 })}
                             </nav>
 
-                            {/* Right Actions */}
                             <div className="flex items-center gap-1 md:gap-4 shrink-0">
 
-                                {/* NEW: Admin Panel Trigger */}
-                                <Link
-                                    to="/admin"
-                                    className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary shrink-0"
-                                    aria-label="Admin Dashboard"
-                                >
-                                    <LayoutDashboard className="h-6 w-6 md:h-5 md:w-5" />
-                                </Link>
+                                {user?.role === "admin" && (
+                                    <Link
+                                        to="/admin"
+                                        className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary shrink-0"
+                                        aria-label="Admin Dashboard"
+                                    >
+                                        <LayoutDashboard className="h-6 w-6 md:h-5 md:w-5" />
+                                    </Link>
+                                )}
 
-                                {/* Search Icon Trigger */}
                                 <button
                                     onClick={() => setIsSearchOpen(true)}
                                     className="p-2 text-foreground hover:text-primary transition cursor-pointer rounded-full hover:bg-secondary shrink-0"
@@ -158,12 +175,11 @@ export function SiteNav() {
                                     <Search className="h-6 w-6 md:h-5 md:w-5" />
                                 </button>
 
-                                {/* Desktop Only: Auth & Cart Icons */}
                                 <div className="hidden md:flex items-center gap-4">
                                     {isAuthenticated ? (
                                         <>
                                             <span className="text-sm font-medium text-primary flex items-center gap-2">
-                                                <User className="h-4 w-4" /> {user?.name}
+                                                <User className="h-4 w-4" /> {user?.name || user?.email?.split('@')[0]}
                                             </span>
                                             <Button variant="ghost" size="sm" onClick={handleLogout} className="cursor-pointer">
                                                 Sign out
@@ -179,7 +195,6 @@ export function SiteNav() {
                             </div>
                         </div>
 
-                        {/* SEARCH STATE: Expands up to Logo dynamically */}
                         <div className={`absolute inset-y-0 right-0 flex items-center w-full transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible translate-x-0 pointer-events-auto' : 'opacity-0 invisible translate-x-8 pointer-events-none'}`}>
                             <div className="flex w-full items-center gap-2 md:gap-3">
                                 <div className="flex flex-1 items-center bg-secondary/40 rounded-full pl-4 pr-2 h-11 md:h-12 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
@@ -210,11 +225,9 @@ export function SiteNav() {
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-                {/* Search Results Dropdown */}
                 {isSearchOpen && searchQuery.trim() !== "" && (
                     <div className="absolute top-18 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border/60 shadow-xl max-h-[70vh] overflow-y-auto z-40 animate-in fade-in slide-in-from-top-2">
                         <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -247,10 +260,8 @@ export function SiteNav() {
                 )}
             </header>
 
-            {/* MOBILE BOTTOM NAVIGATION BAR (Flipkart style) - Added transform-gpu to fix mobile paint bugs */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-md pb-safe transform-gpu">
                 <div className="flex h-17 justify-around items-center px-2 text-[10px] font-medium text-muted-foreground">
-
                     <Link to="/" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/' ? 'text-primary' : 'hover:text-foreground'}`}>
                         <Home className="h-5.5 w-5.5" />
                         <span>Home</span>
@@ -266,9 +277,16 @@ export function SiteNav() {
                         <span>Shop</span>
                     </Link>
 
+                    {user?.role === "admin" && (
+                        <Link to="/admin" className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname.startsWith('/admin') ? 'text-primary' : 'hover:text-foreground'}`}>
+                            <LayoutDashboard className="h-5.5 w-5.5" />
+                            <span>Admin</span>
+                        </Link>
+                    )}
+
                     <button
                         onClick={() => isAuthenticated ? handleLogout() : setAuthOpen(true)}
-                        className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
+                        className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated && !location.pathname.startsWith('/admin') ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
                     >
                         <User className="h-5.5 w-5.5" />
                         <span>Account</span>
@@ -285,11 +303,9 @@ export function SiteNav() {
                         </div>
                         <span>Cart</span>
                     </Link>
-
                 </div>
             </nav>
 
-            {/* AUTH MODAL WITH SMOOTH TRANSITIONS */}
             <Dialog open={authOpen} onOpenChange={handleModalClose}>
                 <DialogContent className="w-[90vw] max-w-95 rounded-3xl p-6 transition-all duration-300 md:max-w-md">
                     <div className="text-center mb-6 relative min-h-20">
@@ -334,6 +350,24 @@ export function SiteNav() {
                             />
                         </div>
 
+                        {/* ⚡ NEW: Mobile Input Field for Signup */}
+                        <div className={`grid transition-all duration-400 ease-in-out ${authMode === "signup" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                            <div className="overflow-hidden">
+                                <div className="space-y-1 pb-1">
+                                    <Label htmlFor="mobile">Mobile Number</Label>
+                                    <Input
+                                        id="mobile"
+                                        type="tel"
+                                        placeholder="+91 9876543210"
+                                        required={authMode === "signup"}
+                                        className="mt-1.5 transition-colors"
+                                        value={formData.mobile}
+                                        onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="space-y-1">
                             <Label htmlFor="password">Password</Label>
                             <Input
@@ -347,8 +381,13 @@ export function SiteNav() {
                             />
                         </div>
 
-                        <Button type="submit" size="lg" className="w-full mt-2 shadow-(--shadow-luxe) cursor-pointer transition-all hover:scale-[1.02] active:scale-95">
-                            {authMode === "signin" ? "Sign In" : "Sign Up"}
+                        <Button
+                            type="submit"
+                            size="lg"
+                            disabled={isLoading}
+                            className="w-full mt-2 shadow-(--shadow-luxe) cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+                        >
+                            {isLoading ? "Please wait..." : (authMode === "signin" ? "Sign In" : "Sign Up")}
                         </Button>
                     </form>
 
