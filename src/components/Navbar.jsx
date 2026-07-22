@@ -275,6 +275,18 @@ export function SiteNav() {
                         <span>Shop</span>
                     </Link>
 
+                    <Link to="/cart" className={`flex flex-col items-center gap-1.5 relative transition-colors ${location.pathname === '/cart' ? 'text-primary' : 'hover:text-foreground'}`}>
+                        <div className="relative">
+                            <ShoppingBag className="h-5.5 w-5.5" />
+                            {count > 0 && (
+                                <span className="absolute -right-2 -top-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                                    {count}
+                                </span>
+                            )}
+                        </div>
+                        <span>Cart</span>
+                    </Link>
+
                     <button
                         onClick={() => isAuthenticated ? handleLogout() : setAuthOpen(true)}
                         className={`flex flex-col items-center gap-1.5 transition-colors ${isAuthenticated ? 'text-primary' : 'hover:text-foreground'} cursor-pointer`}
@@ -291,18 +303,6 @@ export function SiteNav() {
                             </>
                         )}
                     </button>
-
-                    <Link to="/cart" className={`flex flex-col items-center gap-1.5 relative transition-colors ${location.pathname === '/cart' ? 'text-primary' : 'hover:text-foreground'}`}>
-                        <div className="relative">
-                            <ShoppingBag className="h-5.5 w-5.5" />
-                            {count > 0 && (
-                                <span className="absolute -right-2 -top-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
-                                    {count}
-                                </span>
-                            )}
-                        </div>
-                        <span>Cart</span>
-                    </Link>
                 </div>
             </nav>
 
