@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
 let liveSocket = null;
 let visitorLocation = "Fetching Location...";
