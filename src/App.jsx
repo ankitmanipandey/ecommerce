@@ -45,6 +45,14 @@ function PageTracker() {
   const location = useLocation();
 
   useEffect(() => {
+    // ⚡ FIX: Catch UTM parameters from the ad click and save them permanently
+    const params = new URLSearchParams(window.location.search);
+    const utm = params.get("utm_source");
+
+    if (utm) {
+      localStorage.setItem("loomzo_utm", utm);
+    }
+
     trackEvent("page_view");
   }, [location.pathname]);
 

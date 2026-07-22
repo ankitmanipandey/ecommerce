@@ -5,7 +5,6 @@ const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 let liveSocket = null;
 let visitorLocation = "Fetching Location...";
 
-// ⚡ FIX: Use localStorage so it survives page refreshes permanently
 const getSessionId = () => {
     let sid = localStorage.getItem("loomzo_sid");
     if (!sid) {
@@ -35,7 +34,6 @@ const initLivePresence = async () => {
     }
     visitorLocation = loc;
 
-    // ⚡ Send the permanent sessionId to the backend
     liveSocket.emit("visitor_join", {
         sessionId: getSessionId(),
         location: visitorLocation,
@@ -57,22 +55,21 @@ export const trackEvent = async (eventType, extraData = {}) => {
 
         if (socket) {
             socket.emit("visitor_update", {
-                sessionId: getSessionId(), // Ensure backend knows who this is
+                sessionId: getSessionId(),
                 path: window.location.pathname,
                 productName: extraData.productName || ""
             });
         }
 
         if (eventType === "page_view") {
-            // ⚡ FIX: Check localStorage so refreshes don't trigger duplicate page views
             if (localStorage.getItem("loomzo_visit_tracked")) {
                 return;
             }
             localStorage.setItem("loomzo_visit_tracked", "true");
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const utmSource = urlParams.get("utm_source") || "direct";
+        // ⚡ FIX: Pull UTM from localStorage so it isn't lost on internal links
+        let utmSource = localStorage.getItem("loomzo_utm") || "direct";
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         await fetch(`${API_URL}/api/track/event`, {
@@ -82,7 +79,7 @@ export const trackEvent = async (eventType, extraData = {}) => {
                 eventType,
                 path: window.location.pathname,
                 sessionId: getSessionId(),
-                utmSource,
+                utmSource, // Sends the preserved UTM across the whole session
                 deviceType: isMobile ? "Mobile" : "Desktop",
                 ...extraData,
             }),
