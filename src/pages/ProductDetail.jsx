@@ -8,25 +8,9 @@ import { toast } from "sonner";
 import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star } from "lucide-react";
 import { trackEvent } from "../lib/tracker";
 
-// 1. Import the new image
-import p7Image from "../assets/p7.png";
-
 export function ProductDetail() {
     const { id } = useParams();
-
-    // 2. Define the new dummy product locally with a description
-    const dummyProduct = {
-        id: "p7-khaddi-georgette",
-        name: "Red Khaddi Georgette Banarasi",
-        category: "Youth & Trend",
-        price: 1999,
-        image: p7Image,
-        description: "A beautifully draped Red Khaddi Georgette Banarasi saree, perfect for a modern, youthful aesthetic. Lightweight, vibrant, and effortlessly elegant with intricate zari details."
-    };
-
-    // 3. Intercept the lookup: check if the URL id matches our new product, otherwise use standard findProduct
-    const product = id === dummyProduct.id ? dummyProduct : findProduct(id);
-
+    const product = findProduct(id);
     const { add } = useCart();
     const navigate = useNavigate();
 
