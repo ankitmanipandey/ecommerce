@@ -6,6 +6,9 @@ import { cn } from "../lib/utils";
 import { Star } from "lucide-react";
 import { trackEvent } from "../lib/tracker";
 
+// 1. Import the new image from your assets folder
+import p7Image from "../assets/p7.png";
+
 // ⚡ Helper: Prevent spam clicks per session
 const recordProductClick = (productName) => {
     if (!productName) return;
@@ -33,7 +36,20 @@ export function Shop() {
         }
     }, [location.state]);
 
-    const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
+    // 2. Inject the new saree into a combined products list
+    const allProducts = [
+        ...products,
+        {
+            id: "p7-khaddi-georgette",
+            name: "Red Khaddi Georgette Banarasi",
+            category: "Youth & Trend", // Make sure this perfectly matches your category name string
+            price: 1999,
+            image: p7Image
+        }
+    ];
+
+    // 3. Update the filter logic to use the new 'allProducts' array instead of the imported 'products'
+    const filtered = filter === "All" ? allProducts : allProducts.filter((p) => p.category === filter);
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
