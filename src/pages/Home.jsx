@@ -272,27 +272,44 @@ export function Home() {
 }
 
 function ProductCard({ p }) {
+    const discountPercent = p.originalPrice ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
+
     return (
         <Link
             to={`/product/${p.id}`}
-            onClick={() => recordProductClick(p.name)} // ⚡ Track click safely
+            onClick={() => recordProductClick(p.name)}
             className="group block h-full"
         >
-            <div className="aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
+            <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
+                {p.tag && (
+                    <div className="absolute left-2 top-2 z-10 rounded-full bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-primary shadow-sm backdrop-blur-sm">
+                        {p.tag}
+                    </div>
+                )}
                 <img src={p.image} alt={p.name} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
             </div>
             <div className="mt-3">
                 <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent line-clamp-1">
                         {p.category}
                     </p>
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground shrink-0">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                         4.8
                     </div>
                 </div>
-                <h3 className="mt-1 font-serif text-lg text-primary">{p.name}</h3>
-                <p className="text-sm font-semibold">{formatINR(p.price)}</p>
+                <h3 className="mt-1 font-serif text-lg text-primary truncate">{p.name}</h3>
+
+                {/* ⚡ NEW PRICE BLOCK for Home Page */}
+                <div className="mt-1 flex items-baseline gap-2">
+                    <span className="text-sm font-semibold text-foreground">{formatINR(p.price)}</span>
+                    {p.originalPrice && (
+                        <>
+                            <span className="text-xs text-muted-foreground/60 line-through">{formatINR(p.originalPrice)}</span>
+                            <span className="text-[10px] font-bold text-emerald-600">({discountPercent}% OFF)</span>
+                        </>
+                    )}
+                </div>
             </div>
         </Link>
     );

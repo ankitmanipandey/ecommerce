@@ -6,7 +6,6 @@ import { cn } from "../lib/utils";
 import { Star } from "lucide-react";
 import { trackEvent } from "../lib/tracker";
 
-// ⚡ Helper: Prevent spam clicks per session
 const recordProductClick = (productName) => {
     if (!productName) return;
     const tracked = JSON.parse(sessionStorage.getItem("loomzo_tracked_products") || "[]");
@@ -15,6 +14,15 @@ const recordProductClick = (productName) => {
         sessionStorage.setItem("loomzo_tracked_products", JSON.stringify(tracked));
         trackEvent("product_click", { productName });
     }
+};
+
+const tagRanking = {
+    "Bestseller": 1,
+    "Trending": 2,
+    "Tribe Favorite": 3,
+    "Artisan Edition": 4,
+    "Heirloom": 5,
+    "Easy Drape": 6
 };
 
 export function Shop() {
@@ -33,8 +41,12 @@ export function Shop() {
         }
     }, [location.state]);
 
-    // Use the products array directly from products.js
-    const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
+    const filteredAndSorted = (filter === "All" ? products : products.filter((p) => p.category === filter))
+        .sort((a, b) => {
+            const rankA = tagRanking[a.tag] || 99;
+            const rankB = tagRanking[b.tag] || 99;
+            return rankA - rankB;
+        });
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
@@ -46,10 +58,7 @@ export function Shop() {
                     <h1 className="mt-2 font-serif text-4xl text-primary md:text-5xl">Every Saree, A Story</h1>
                 </div>
 
-                <div
-                    className="mb-8 flex flex-wrap justify-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
-                    style={{ animationDelay: "150ms" }}
-                >
+                <div className="mb-8 flex flex-wrap justify-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: "150ms" }}>
                     {["All", ...categories.map((c) => c.name)].map((c) => (
                         <button
                             key={c}
@@ -65,39 +74,59 @@ export function Shop() {
                 </div>
 
                 <div key={filter} className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-3">
-                    {filtered.map((p, index) => (
-                        <Link
-                            key={p.id}
-                            to={`/product/${p.id}`}
-                            onClick={() => recordProductClick(p.name)}
-                            className="group block animate-in fade-in slide-in-from-bottom-6 fill-mode-both"
-                            style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                            <div className="aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
-                                <img
-                                    src={p.image}
-                                    alt={p.name}
-                                    loading="lazy"
-                                    width={800}
-                                    height={1000}
-                                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                                />
-                            </div>
-                            <div className="mt-3">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent">
-                                        {p.category}
-                                    </p>
-                                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                        4.8
+                    {filteredAndSorted.map((p, index) => {
+                        // ⚡ Calculate the discount dynamically
+                        const discountPercent = p.originalPrice ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
+
+                        return (
+                            <Link
+                                key={p.id}
+                                to={`/product/${p.id}`}
+                                onClick={() => recordProductClick(p.name)}
+                                className="group block animate-in fade-in slide-in-from-bottom-6 fill-mode-both"
+                                style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
+                                    {p.tag && (
+                                        <div className="absolute left-2 top-2 z-10 rounded-full bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-primary shadow-sm backdrop-blur-sm">
+                                            {p.tag}
+                                        </div>
+                                    )}
+                                    <img
+                                        src={p.image}
+                                        alt={p.name}
+                                        loading="lazy"
+                                        width={800}
+                                        height={1000}
+                                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                    />
+                                </div>
+                                <div className="mt-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent line-clamp-1">
+                                            {p.category}
+                                        </p>
+                                        <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground shrink-0">
+                                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                            4.8
+                                        </div>
+                                    </div>
+                                    <h3 className="mt-1 font-serif text-lg text-primary truncate">{p.name}</h3>
+
+                                    {/* ⚡ NEW PRICE BLOCK: Current, Original, and % Off */}
+                                    <div className="mt-1 flex items-baseline gap-2">
+                                        <span className="text-sm font-semibold text-foreground">{formatINR(p.price)}</span>
+                                        {p.originalPrice && (
+                                            <>
+                                                <span className="text-xs text-muted-foreground/60 line-through">{formatINR(p.originalPrice)}</span>
+                                                <span className="text-[10px] font-bold text-emerald-600">({discountPercent}% OFF)</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-                                <h3 className="mt-1 font-serif text-lg text-primary">{p.name}</h3>
-                                <p className="text-sm font-semibold">{formatINR(p.price)}</p>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        )
+                    })}
                 </div>
             </main>
             <SiteFooter />
