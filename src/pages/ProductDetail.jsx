@@ -68,6 +68,16 @@ export function ProductDetail() {
                     </div>
 
                     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: "250ms" }}>
+
+                        {/* ⚡ NEW: Amazon-style Badge added to Product Detail */}
+                        {product.tag && (
+                            <div className="mb-3">
+                                <span className="rounded-sm bg-[#C7511F] px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                                    {product.tag}
+                                </span>
+                            </div>
+                        )}
+
                         <p className="text-xs uppercase tracking-[0.3em] text-accent">{product.category}</p>
                         <h1 className="mt-2 font-serif text-4xl text-primary md:text-5xl">{product.name}</h1>
 

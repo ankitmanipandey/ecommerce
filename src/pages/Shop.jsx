@@ -75,7 +75,6 @@ export function Shop() {
 
                 <div key={filter} className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-3">
                     {filteredAndSorted.map((p, index) => {
-                        // ⚡ Calculate the discount dynamically
                         const discountPercent = p.originalPrice ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
 
                         return (
@@ -83,15 +82,11 @@ export function Shop() {
                                 key={p.id}
                                 to={`/product/${p.id}`}
                                 onClick={() => recordProductClick(p.name)}
-                                className="group block animate-in fade-in slide-in-from-bottom-6 fill-mode-both"
+                                className="group block animate-in fade-in slide-in-from-bottom-6 fill-mode-both flex-col h-full"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-card ring-1 ring-border transition-all duration-300 group-hover:shadow-md">
-                                    {p.tag && (
-                                        <div className="absolute left-2 top-2 z-10 rounded-full bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-primary shadow-sm backdrop-blur-sm">
-                                            {p.tag}
-                                        </div>
-                                    )}
+                                    {/* Tag removed from inside the image completely */}
                                     <img
                                         src={p.image}
                                         alt={p.name}
@@ -101,7 +96,16 @@ export function Shop() {
                                         className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                     />
                                 </div>
-                                <div className="mt-3">
+                                <div className="mt-3 flex flex-1 flex-col">
+                                    {/* ⚡ NEW: Amazon-style Badge below the image */}
+                                    {p.tag && (
+                                        <div className="mb-1.5 self-start">
+                                            <span className="rounded-sm bg-[#C7511F] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                                                {p.tag}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center justify-between gap-2">
                                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground transition-colors group-hover:text-accent line-clamp-1">
                                             {p.category}
@@ -113,7 +117,6 @@ export function Shop() {
                                     </div>
                                     <h3 className="mt-1 font-serif text-lg text-primary truncate">{p.name}</h3>
 
-                                    {/* ⚡ NEW PRICE BLOCK: Current, Original, and % Off */}
                                     <div className="mt-1 flex items-baseline gap-2">
                                         <span className="text-sm font-semibold text-foreground">{formatINR(p.price)}</span>
                                         {p.originalPrice && (
