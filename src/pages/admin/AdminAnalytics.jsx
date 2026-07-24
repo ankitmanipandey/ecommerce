@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { BarChart3, Smartphone, MousePointer, ShoppingBag, CheckCircle2, XCircle, Beaker, Users } from "lucide-react";
+import { BarChart3, Smartphone, MousePointer, ShoppingBag, CheckCircle2, XCircle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
 
@@ -23,16 +23,6 @@ export function AdminAnalytics() {
     const [productClicks, setProductClicks] = useState([]);
     const [checkoutIntents, setCheckoutIntents] = useState([]);
 
-    // ⚡ NEW: State for your Painted Door A/B Test
-    const [testStats, setTestStats] = useState({
-        bundleClicks: 0,
-        waitlistOpens: 0,
-        waitlistSubmits: 0
-    });
-
-    // ⚡ NEW: State to store captured Waitlist Leads
-    const [waitlistLeads, setWaitlistLeads] = useState([]);
-
     useEffect(() => {
         fetch(`${API_URL}/api/track/traffic`).then(res => res.json()).then(data => {
             if (data.success) setTraffic({ total: data.total, sources: data.sources, devices: data.devices });
@@ -44,13 +34,6 @@ export function AdminAnalytics() {
 
         fetch(`${API_URL}/api/track/checkout-intents`).then(res => res.json()).then(data => {
             if (data.success) setCheckoutIntents(data.checkoutIntents);
-        });
-
-        fetch(`${API_URL}/api/track/ab-test-stats`).then(res => res.json()).then(data => {
-            if (data.success) {
-                setTestStats(data.stats);
-                setWaitlistLeads(data.leads);
-            }
         });
 
         const socket = io(API_URL);
@@ -106,28 +89,6 @@ export function AdminAnalytics() {
                     )
                 );
             }
-
-            // ⚡ NEW: Catching the Painted Door Test Events!
-            if (newEvent.eventType === "budget_bundle_clicked") {
-                setTestStats(prev => ({ ...prev, bundleClicks: prev.bundleClicks + 1 }));
-            }
-
-            if (newEvent.eventType === "premium_waitlist_opened") {
-                setTestStats(prev => ({ ...prev, waitlistOpens: prev.waitlistOpens + 1 }));
-            }
-
-            if (newEvent.eventType === "premium_waitlist_submitted") {
-                setTestStats(prev => ({ ...prev, waitlistSubmits: prev.waitlistSubmits + 1 }));
-
-                // Store the actual lead data!
-                setWaitlistLeads(prev => [{
-                    id: newEvent._id,
-                    name: newEvent.customerData?.name || "Unknown",
-                    mobile: newEvent.customerData?.mobile || "No Number",
-                    productName: newEvent.productName,
-                    timestamp: newEvent.timestamp
-                }, ...prev]);
-            }
         });
 
         return () => socket.disconnect();
@@ -143,53 +104,6 @@ export function AdminAnalytics() {
             <h1 className="font-serif text-2xl md:text-3xl text-primary">Traffic & Clicks</h1>
             <p className="mt-1 md:mt-2 text-sm md:text-base text-muted-foreground">Analyze where your visitors are coming from and what they are clicking in real-time.</p>
 
-            {/* ⚡ NEW: Painted Door Test Results Section */}
-            <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
-                <div className="rounded-xl border border-border bg-amber-50/50 p-5 md:p-6 shadow-sm">
-                    <div className="mb-4 flex items-center gap-2 text-amber-600">
-                        <Beaker className="h-5 w-5" />
-                        <h2 className="font-serif text-lg md:text-xl font-semibold">Live A/B Test Results</h2>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="rounded-lg bg-background p-3 border border-border">
-                            <p className="text-xs text-muted-foreground mb-1">Bundle Clicks</p>
-                            <p className="text-xl font-bold text-green-600">{testStats.bundleClicks}</p>
-                        </div>
-                        <div className="rounded-lg bg-background p-3 border border-border">
-                            <p className="text-xs text-muted-foreground mb-1">Waitlist Opens</p>
-                            <p className="text-xl font-bold text-primary">{testStats.waitlistOpens}</p>
-                        </div>
-                        <div className="rounded-lg bg-background p-3 border border-border">
-                            <p className="text-xs text-muted-foreground mb-1">Waitlist Leads</p>
-                            <p className="text-xl font-bold text-emerald-600">{testStats.waitlistSubmits}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-emerald-50/50 p-5 md:p-6 shadow-sm">
-                    <div className="mb-4 flex items-center gap-2 text-emerald-600">
-                        <Users className="h-5 w-5" />
-                        <h2 className="font-serif text-lg md:text-xl font-semibold">Hot Waitlist Leads</h2>
-                    </div>
-                    {waitlistLeads.length === 0 ? (
-                        <p className="text-xs md:text-sm text-emerald-800/60 py-2 text-center">No waitlist submissions yet. Keep watching!</p>
-                    ) : (
-                        <div className="max-h-24 overflow-y-auto divide-y divide-emerald-100 pr-2">
-                            {waitlistLeads.map((lead) => (
-                                <div key={lead.id} className="py-2 flex justify-between items-center">
-                                    <div>
-                                        <p className="text-sm font-semibold text-emerald-900">{lead.name} <span className="text-xs font-normal text-emerald-700">({lead.mobile})</span></p>
-                                        <p className="text-[10px] text-emerald-600 line-clamp-1">{lead.productName}</p>
-                                    </div>
-                                    <span className="text-[10px] text-emerald-500">{getTimeAgo(lead.timestamp)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Existing Sections Below */}
             <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
                 {/* Card 1: TOP TRAFFIC SOURCES */}
                 <div className="rounded-xl border border-border bg-card p-5 md:p-6 shadow-sm transition-all hover:shadow-md">

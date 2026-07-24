@@ -1,11 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SiteNav, SiteFooter } from "../components/Navbar";
 import { Button } from "../components/ui/button";
 import { findProduct, formatINR } from "../lib/products";
 import { useCart } from "../lib/cart";
 import { toast } from "sonner";
-import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star, X } from "lucide-react";
+import { ShoppingBag, Truck, RotateCcw, ShieldCheck, Star } from "lucide-react";
 import { trackEvent } from "../lib/tracker";
 
 export function ProductDetail() {
@@ -16,9 +16,6 @@ export function ProductDetail() {
 
     const isPremium = product?.price >= 3000;
     const isBudget = product?.price <= 1500;
-
-    const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
-    const [waitlistData, setWaitlistData] = useState({ name: "", mobile: "" });
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -35,17 +32,6 @@ export function ProductDetail() {
     const buyNow = () => {
         add(product);
         navigate("/checkout");
-    };
-
-    const handleWaitlistSubmit = (e) => {
-        e.preventDefault();
-        trackEvent("premium_waitlist_submitted", {
-            productName: product.name,
-            customerData: { name: waitlistData.name, mobile: waitlistData.mobile }
-        });
-        toast.success("You're on the list! We will WhatsApp you when the weavers finish the next batch.");
-        setIsWaitlistOpen(false);
-        setWaitlistData({ name: "", mobile: "" });
     };
 
     if (!product) return null;
@@ -69,7 +55,7 @@ export function ProductDetail() {
 
                     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: "250ms" }}>
 
-                        {/* ⚡ NEW: Amazon-style Badge added to Product Detail */}
+                        {/* ⚡ Amazon-style Badge */}
                         {product.tag && (
                             <div className="mb-3">
                                 <span className="rounded-sm bg-[#C7511F] px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white shadow-sm">
@@ -88,7 +74,7 @@ export function ProductDetail() {
                             <span>{isPremium ? "Limited Artisan Edition" : "120+ happy draped customers"}</span>
                         </div>
 
-                        {/* ⚡ NEW PRICE BLOCK for Product Detail */}
+                        {/* ⚡ PRICE BLOCK */}
                         <div className="mt-5 flex items-end gap-3">
                             <p className="text-3xl font-semibold text-foreground">{formatINR(product.price)}</p>
                             {product.originalPrice && (
@@ -115,27 +101,18 @@ export function ProductDetail() {
 
                         <p className="mt-6 text-base leading-relaxed text-muted-foreground">{product.description}</p>
 
-                        {isPremium ? (
-                            <div className="mt-8">
-                                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                        {/* ⚡ Modified to allow immediate purchase for ALL products */}
+                        <div className="mt-8 flex flex-col gap-4">
+                            {isPremium && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
                                     <p className="text-sm font-semibold text-amber-900">✨ Authentic Handloom: High Demand</p>
                                     <p className="mt-1 text-xs text-amber-800/80 leading-relaxed">
-                                        Due to the complex 14-day artisanal weaving process, this heirloom piece is currently out of stock. Reserve yours from the next artisan batch.
+                                        Due to the complex 14-day artisanal weaving process, this heirloom piece is produced in limited batches. Order now to secure yours from the current batch.
                                     </p>
                                 </div>
-                                <Button
-                                    size="lg"
-                                    onClick={() => {
-                                        setIsWaitlistOpen(true);
-                                        trackEvent("premium_waitlist_opened", { productName: product.name });
-                                    }}
-                                    className="h-14 w-full shadow-(--shadow-luxe) cursor-pointer text-base font-medium transition-transform hover:scale-[1.02] active:scale-95"
-                                >
-                                    Reserve from Next Artisan Batch
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="mt-8 flex flex-wrap gap-3">
+                            )}
+
+                            <div className="flex flex-wrap gap-3">
                                 <Button size="lg" onClick={() => { add(product); toast.success("Added to cart"); }} variant="outline" className="h-12 px-6 cursor-pointer transition-transform hover:scale-105 active:scale-95">
                                     <ShoppingBag className="mr-2 h-4 w-4" /> Add to cart
                                 </Button>
@@ -143,7 +120,7 @@ export function ProductDetail() {
                                     Buy now
                                 </Button>
                             </div>
-                        )}
+                        </div>
 
                         <div className="mt-10 grid gap-4 border-t border-border pt-6 text-sm md:grid-cols-3">
                             <div className="flex items-start gap-2"><Truck className="mt-0.5 h-4 w-4 text-accent" /><span>Free shipping<br /><span className="text-xs text-muted-foreground">Delivered in 4–7 days</span></span></div>
@@ -154,55 +131,6 @@ export function ProductDetail() {
                 </div>
             </main>
             <SiteFooter />
-
-            {isWaitlistOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-card border border-border shadow-2xl p-6 md:p-8">
-                        <button
-                            onClick={() => setIsWaitlistOpen(false)}
-                            className="absolute right-4 top-4 p-2 text-muted-foreground hover:bg-secondary hover:text-foreground rounded-full transition-colors"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
-
-                        <div className="text-center mb-6">
-                            <p className="text-xs uppercase tracking-widest text-accent mb-2">Exclusive Access</p>
-                            <h2 className="font-serif text-2xl text-primary">Join the Waitlist</h2>
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Enter your details to secure your <strong>{product.name}</strong> from our weavers' next batch. No payment required today.
-                            </p>
-                        </div>
-
-                        <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">Full Name</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Your Name"
-                                    className="w-full h-11 px-4 rounded-xl border border-border bg-secondary/30 text-sm outline-none focus:border-primary/50 transition-colors"
-                                    value={waitlistData.name}
-                                    onChange={(e) => setWaitlistData({ ...waitlistData, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium">WhatsApp Number</label>
-                                <input
-                                    required
-                                    type="tel"
-                                    placeholder="+91 9876543210"
-                                    className="w-full h-11 px-4 rounded-xl border border-border bg-secondary/30 text-sm outline-none focus:border-primary/50 transition-colors"
-                                    value={waitlistData.mobile}
-                                    onChange={(e) => setWaitlistData({ ...waitlistData, mobile: e.target.value })}
-                                />
-                            </div>
-                            <Button type="submit" size="lg" className="w-full h-12 mt-2 font-medium cursor-pointer transition-transform hover:scale-[1.02] active:scale-95">
-                                Secure My Spot
-                            </Button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

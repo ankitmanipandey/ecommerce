@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from "../components/ui/dialog";
 import { useCart } from "../lib/cart";
 import { formatINR } from "../lib/products";
 import { toast } from "sonner";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2, Heart } from "lucide-react";
 import { z } from "zod";
 import { trackEvent } from "../lib/tracker";
 
@@ -27,7 +27,6 @@ export function Checkout() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    // ⚡ FIX: Correctly track when the cart changes, avoiding stale sessions
     useEffect(() => {
         window.scrollTo(0, 0);
 
@@ -35,7 +34,6 @@ export function Checkout() {
             const cartItemsString = items.map(item => item.product.name).join(" + ");
             const lastTrackedCart = sessionStorage.getItem("loomzo_last_cart");
 
-            // Only send event if they actually changed what's in their cart
             if (lastTrackedCart !== cartItemsString) {
                 sessionStorage.setItem("loomzo_last_cart", cartItemsString);
                 trackEvent("checkout_view", { productName: cartItemsString });
@@ -58,11 +56,12 @@ export function Checkout() {
 
         try {
             await trackEvent("checkout_attempt", {
-                productName: items.map(item => item.product.name).join(", "),
+                productName: items.map(item => item.product.name).join(" + "),
                 orderTotal: total,
                 customerData: {
                     name: form.fullName,
                     whatsapp: form.whatsapp,
+                    mobile: form.whatsapp,
                     address: form.address
                 }
             });
@@ -151,14 +150,23 @@ export function Checkout() {
             <SiteFooter />
 
             <Dialog open={success} onOpenChange={setSuccess}>
-                <DialogContent className="max-w-md text-center">
+                <DialogContent
+                    className="max-w-md text-center"
+                    onInteractOutside={(e) => e.preventDefault()}
+                    onEscapeKeyDown={(e) => e.preventDefault()}
+                >
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/20">
                         <CheckCircle2 className="h-9 w-9 text-primary" />
                     </div>
-                    <h2 className="mt-4 font-serif text-3xl text-primary">Thank you!</h2>
-                    <p className="mt-2 text-muted-foreground">Your order is confirmed. Our team will contact you on WhatsApp shortly with dispatch details.</p>
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm">
-                        <MessageCircle className="h-4 w-4 text-accent" /> Expect a message within a few hours
+                    {/* ⚡ NEW: Warm, professional survey message */}
+                    <h2 className="mt-4 font-serif text-3xl text-primary">Thank you for the love! ✨</h2>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        To bring you the most beautiful handloom pieces, we are running a quick survey to understand which designs our Loomzo family loves the most.
+                        <br /><br />
+                        While this specific order won't be dispatched today, your interest means the world to us! We have securely saved your details and will personally reach out on WhatsApp the moment our weavers finish the next batch.
+                    </p>
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm text-primary font-medium">
+                        <Heart className="h-4 w-4 text-accent fill-accent" /> You are on our priority list!
                     </div>
                     <div className="mt-6 flex justify-center gap-2">
                         <Button asChild><Link to="/">Back to home</Link></Button>
